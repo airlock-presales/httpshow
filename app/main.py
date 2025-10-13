@@ -67,7 +67,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="OIDC Request Inspector",
     description="Simple HTTP request inspector with OIDC support",
-    version="0.3.1",
+    version="0.3.2",
     lifespan=lifespan,
 )
 

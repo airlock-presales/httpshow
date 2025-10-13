@@ -28,13 +28,18 @@ spec:
           type: RuntimeDefault
       containers:
       - name: web
-        image: quay.io/miniboat/httpshow:0.3.1
+        image: quay.io/miniboat/httpshow:0.3.2
         imagePullPolicy: IfNotPresent
         ports:
         - name: http
           containerPort: 8000
           protocol: TCP
         env:
+        - name: HTTPSHOW_LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: hhttpshow
+              key: HTTPSHOW_LOG_LEVEL
         - name: HTTPSHOW_SERVER_PORT
           valueFrom:
             configMapKeyRef:

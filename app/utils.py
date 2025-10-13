@@ -35,16 +35,15 @@ from fastapi import Request
 logger = logging.getLogger(__name__)
 
 
-def setup_logging():
+def setup_logging(level: int=30):
     """Configure logging."""
     logging.basicConfig(
-        level=logging.INFO,
+        level=level, #logging.INFO,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
-    uvicorn_error = logging.getLogger("uvicorn.error")
-    uvicorn_error.disabled = True
-    uvicorn_access = logging.getLogger("uvicorn.access")
-    uvicorn_access.disabled = True
+    for logname in ["uvicorn.error", "uvicorn.access"]:
+        l_error = logging.getLogger(logname)
+        l_error.disabled = True
 
 
 def safe_html_escape(text: str, max_length: int = 10000) -> str:
