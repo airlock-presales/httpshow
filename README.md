@@ -23,6 +23,7 @@ cd httpshow
 ```bash
 cp samples/env.example .env
 # Edit .env
+docker compose up -d
 ```
 
 ## Deploy on Kubernetes
