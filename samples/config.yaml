@@ -1,0 +1,28 @@
+---
+httpshow:
+  appSecret: ""
+  session:
+    cookieName: null
+    lifetime: 300
+  cssFile: ""
+  nightMode: false
+  templates:
+    template-dir: ./templates/
+server:
+  baseURL: "http://localhost:8000"
+  port: 8000
+  trustedProxies: []
+  trustProxyHeaders: false
+oidc:
+  issuer: ""
+  client:
+    id: ""
+    secret: ""
+    timeout: 30.0
+  scopes:
+    - email
+    - profile
+  pkce: true
+  userInfo: false
+  par: false
+  verifyProviderCertificate: true

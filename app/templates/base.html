@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <title>{% block title %}HTTPShow Request Inspector{% endblock %}</title>
+    <link rel="stylesheet" href="/static/pico.min.css">
+    <link rel="stylesheet" href="/static/pico.colors.min.css">
+    {% if css_file %}
+    <link rel="stylesheet" href="{{ css_file }}">
+    {% else %}
+    <link rel="stylesheet" href="/static/style.css">
+    {% endif %}
+    {% if night_mode or request.session.get('night_mode') %}
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+        }
+        .section {
+            background-color: #2a2a2a;
+            border-color: #444;
+        }
+        .section h2 {
+            background-color: #333;
+            border-color: #555;
+        }
+        pre, code {
+            background-color: #1e1e1e;
+            border-color: #444;
+        }
+        a {
+            color: #6ba3ff;
+        }
+        button, .button {
+            background-color: #0066cc;
+            color: white;
+        }
+        button:hover, .button:hover {
+            background-color: #0052a3;
+        }
+        input, textarea {
+            background-color: #2a2a2a;
+            color: #e0e0e0;
+            border-color: #444;
+        }
+    </style>
+    {% endif %}
+</head>
+<body data-theme="dark">
+    <div class="container">
+        <header>
+            <nav>
+                <a href="#"><img src="/static/logo.png" alt="Logo"></a>
+                <a href="/{{ path }}"><h2 id="title">{% block heading %}HTTPShow Request Inspector{% endblock %}</h2></a>
+                <a href="#"></a>
+                <a href="#"></a>
+                <a href="#"></a>
+                <ul class="icons">
+                    <li><a href="/profile" class="button"><img src="/static/openid.png" alt="OIDC"></a></li>
+                    {% if user %}
+                    <li><a href="/oidc/logout" class="button"><img src="/static/logout.png" alt="Logout"></a></li>
+                    <!-- <li>
+                        <form method="POST" action="/oidc/logout" style="display: inline;">
+                            <button type="submit">
+                                <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128"><path d="M13.076 97.083a1.75 1.75 0 0 0 1.75-1.75V66.667a1.75 1.75 0 0 0-3.5 0v28.666a1.75 1.75 0 0 0 1.75 1.75zM122.38 64.97c.027-.041.046-.085.069-.128a1.037 1.037 0 0 0 .146-.348c.015-.051.035-.1.045-.152a1.755 1.755 0 0 0 0-.685c-.01-.053-.03-.1-.045-.152a1.733 1.733 0 0 0-.054-.174 1.692 1.692 0 0 0-.092-.174c-.023-.042-.042-.086-.069-.127a1.75 1.75 0 0 0-.22-.269l-12.509-12.509a1.75 1.75 0 0 0-2.475 2.475l9.524 9.523H63.424a1.75 1.75 0 0 0 0 3.5H116.7l-9.523 9.523a1.75 1.75 0 1 0 2.475 2.475l12.508-12.509a1.75 1.75 0 0 0 .22-.269z"/><path d="M95.424 72.25a1.75 1.75 0 0 0-1.75 1.75v36.9H48.633V17.1h45.041V54a1.75 1.75 0 1 0 3.5 0V15.35a1.75 1.75 0 0 0-1.75-1.75H48.633V6.5a1.75 1.75 0 0 0-2.461-1.6L6.365 22.593a1.751 1.751 0 0 0-1.039 1.6v79.615a1.751 1.751 0 0 0 1.039 1.6L46.172 123.1a1.75 1.75 0 0 0 2.461-1.6v-7.1h46.791a1.75 1.75 0 0 0 1.75-1.75V74a1.75 1.75 0 0 0-1.75-1.75zm-50.291 46.558L8.826 102.67V25.33L45.133 9.192z"/></svg>
+                            </button>
+                        </form>
+                    </li> -->
+                    {% endif %}
+                    <!-- <li>
+                        <a class="contrast" aria-label="Turn off dark mode" data-discover="true" href="/docs/color-schemes">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 32 32" fill="currentColor" class="icon-theme-toggle  moon">
+                                <clipPath id="theme-toggle-cutout"><path d="M0-11h25a1 1 0 0017 13v30H0Z"></path></clipPath>
+                                <g clip-path="url(#theme-toggle-cutout)">
+                                    <circle cx="16" cy="16" r="8.4"></circle>
+                                    <path d="M18.3 3.2c0 1.3-1 2.3-2.3 2.3s-2.3-1-2.3-2.3S14.7.9 16 .9s2.3 1 2.3 2.3zm-4.6 25.6c0-1.3 1-2.3 2.3-2.3s2.3 1 2.3 2.3-1 2.3-2.3 2.3-2.3-1-2.3-2.3zm15.1-10.5c-1.3 0-2.3-1-2.3-2.3s1-2.3 2.3-2.3 2.3 1 2.3 2.3-1 2.3-2.3 2.3zM3.2 13.7c1.3 0 2.3 1 2.3 2.3s-1 2.3-2.3 2.3S.9 17.3.9 16s1-2.3 2.3-2.3zm5.8-7C9 7.9 7.9 9 6.7 9S4.4 8 4.4 6.7s1-2.3 2.3-2.3S9 5.4 9 6.7zm16.3 21c-1.3 0-2.3-1-2.3-2.3s1-2.3 2.3-2.3 2.3 1 2.3 2.3-1 2.3-2.3 2.3zm2.4-21c0 1.3-1 2.3-2.3 2.3S23 7.9 23 6.7s1-2.3 2.3-2.3 2.4 1 2.4 2.3zM6.7 23C8 23 9 24 9 25.3s-1 2.3-2.3 2.3-2.3-1-2.3-2.3 1-2.3 2.3-2.3z"></path>
+                                </g>
+                            </svg>
+                        </a>
+                    </li> -->
+                </ul>
+                <!-- <form method="POST" action="/toggle-theme" style="display: inline;">
+                    <input type="hidden" name="theme" value="{% if night_mode or request.session.get('night_mode') %}day{% else %}night{% endif %}">
+                    <button type="submit">{% if night_mode or request.session.get('night_mode') %}☀️ Day{% else %}🌙 Night{% endif %}</button>
+                </form> -->
+            </nav>
+        </header>
+
+        <main>
+            {% block content %}{% endblock %}
+        </main>
+
+        <footer>
+            <p><a href="https://github.com/airlock-presales/httpshow">HTTPShow Request Inspector v0.3.0</a></p>
+        </footer>
+    </div>
+</body>
+</html>

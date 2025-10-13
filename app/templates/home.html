@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="section">
+    <h2>Welcome</h2>
+    {% if user %}
+    <p>✅ Signed in as: <strong>{{ user.email or user.sub }}</strong></p>
+    <p>Name: {{ user.name or 'N/A' }}</p>
+    {% else %}
+    <p>❌ Not signed in</p>
+    <p>Click "Login with OIDC" to authenticate.</p>
+    {% endif %}
+</div>
+
+<div class="section">
+    <h2>Features</h2>
+    <ul>
+        <li><strong>Request Inspector:</strong> View detailed HTTP request information</li>
+        <li><strong>OIDC Relying Party:</strong> Authorization Code flow with PKCE and PAR support</li>
+        <li><strong>OIDC Resource Server:</strong> Token introspection and validation</li>
+        <li><strong>Security:</strong> State, nonce, PKCE, secure cookies, CSP headers</li>
+    </ul>
+</div>
+
+<div class="section">
+    <h2>Quick Actions</h2>
+    <p><a href="/{{ path }}" class="button">Inspect Current Request</a></p>
+    {% if user %}
+    <p><a href="/profile" class="button">View Profile (Token Introspection)</a></p>
+    {% else %}
+    <p><a href="/oidc/login" class="button">Login with OIDC</a></p>
+    {% endif %}
+</div>
+
+<div class="section collapsible">
+    <h2 onclick="toggleSection(this)">▶ Current Request Details</h2>
+    <div class="content" style="display: none;">
+        <pre>{{ details.request_line }}</pre>
+        <p><strong>Method:</strong> {{ details.method }}</p>
+        <p><strong>Path:</strong> {{ details.path }}</p>
+        <p><strong>Client IP:</strong> {{ details.client_ip }}</p>
+    </div>
+</div>
+
+<script>
+function toggleSection(element) {
+    const content = element.nextElementSibling;
+    const isHidden = content.style.display === 'none';
+    content.style.display = isHidden ? 'block' : 'none';
+    element.textContent = (isHidden ? '▼' : '▶') + element.textContent.substring(1);
+}
+</script>
+{% endblock %}

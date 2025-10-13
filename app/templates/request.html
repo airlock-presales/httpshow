@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Request Details{% endblock %}
+{% block heading %}Request Details{% endblock %}
+
+{% block content %}
+{% if user %}
+<div class="section collapsible">
+    <h5 class="pico-color-azure-550" class="pico-color-azure-550" onclick="toggleSection(this)">👤 Authenticated User</h5>
+    <p class="user_header">Email: <strong>{{ user.email or 'N/A' }}</strong></p>
+    <p class="user_header">Name: <strong>{{ user.name or 'N/A' }}</strong></p>
+    <p class="user_header">User ID: <strong>{{ user.user_id }}</strong></p>
+</div>
+{% endif %}
+
+<div class="section collapsible">
+    <h5 class="pico-color-azure-550" onclick="toggleSection(this)">▼ Request Line</h5>
+    <div class="content">
+        <pre>{{ details.request_line }}</pre>
+    </div>
+</div>
+
+<div class="section collapsible">
+    <h5 class="pico-color-azure-550" onclick="toggleSection(this)">▼ Query Parameters</h5>
+    <div class="content">
+        {% if details.query_params %}
+        <pre>{{ details.query_params | tojson(indent=2) }}</pre>
+        {% else %}
+        <p><em>No query parameters</em></p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="section collapsible">
+    <h5 class="pico-color-azure-550" onclick="toggleSection(this)">▼ Headers</h5>
+    <div class="content">
+        <table>
+            <thead>
+                <tr>
+                    <th>Header</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for key, value in details.headers.items() | sort %}
+                <tr>
+                    <td class="header_header">{{ key }}</td>
+                    <td><code>{{ value }}</code></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        {% if details.basic_auth %}
+        <div style="margin-top: 1rem; padding: 1rem; background: #fff3cd; border-left: 4px solid #ffc107;">
+            <strong>🔓 Basic Auth Decoded:</strong>
+            <p><small>Username:</small> <code>{{ details.basic_auth.username }}</code></p>
+            <p><small>Password:</small> <code>{{ details.basic_auth.password }}</code></p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="section collapsible">
+    <h5 class="pico-color-azure-550" onclick="toggleSection(this)">▼ Cookies</h5>
+    <div class="content">
+        {% if details.cookies %}
+        <pre>{{ details.cookies | tojson(indent=2) }}</pre>
+        {% else %}
+        <p><em>No cookies</em></p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="section collapsible">
+    <h5 class="pico-color-azure-550" onclick="toggleSection(this)">▼ Request Body</h5>
+    <div class="content">
+        <p><small>Content-Type:</small> <strong>{{ details.content_type or 'Not specified' }}</strong></p>
+        {% if details.body_preview %}
+        <pre>{{ details.body_preview }}</pre>
+        {% else %}
+        <p><em>No body content</em></p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="section collapsible">
+    <h5 class="pico-color-azure-550" onclick="toggleSection(this)">▼ Client Information</h5>
+    <div class="content">
+        <p><small>Client IP:</small> <strong>{{ details.client_ip }}</strong></p>
+        {% if details.forwarded_for %}
+        <p><small>X-Forwarded-For:</small> <strong>{{ details.forwarded_for }} 
+            <span style="color: {% if details.forwarded_trust == 'trusted' %}green{% else %}red{% endif %};">
+                ({{ details.forwarded_trust }})
+            </span></strong>
+        </p>
+        {% endif %}
+    </div>
+</div>
+
+{% if oidc_details %}
+<div class="section collapsible">
+    <h5 class="pico-color-azure-550" onclick="toggleSection(this)">▼ OIDC ID Token</h5>
+    <div class="content">
+        {% if oidc_details.id_token %}
+        <h>Header:</h6>
+        <pre>{{ oidc_details.id_token.header | tojson(indent=2) }}</pre>
+        <h6>Payload:</h6>
+        <pre>{{ oidc_details.id_token.payload | tojson(indent=2) }}</pre>
+        <h6>Raw Token:</h6>
+        <pre style="word-break: break-all;">{{ oidc_details.id_token.raw }}</pre>
+        {% else %}
+        <p><em>No ID token</em></p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="section collapsible">
+    <h5 class="pico-color-azure-550" onclick="toggleSection(this)">▼ OIDC Access Token</h5>
+    <div class="content">
+        {% if oidc_details.access_token %}
+        {% if oidc_details.access_token.header %}
+        <h6>Header:</h6>
+        <pre>{{ oidc_details.access_token.header | tojson(indent=2) }}</pre>
+        <h6>Payload:</h6>
+        <pre>{{ oidc_details.access_token.payload | tojson(indent=2) }}</pre>
+        {% endif %}
+        <h6>Raw Token:</h6>
+        <pre style="word-break: break-all;">{{ oidc_details.access_token.raw }}</pre>
+        {% else %}
+        <p><em>No access token</em></p>
+        {% endif %}
+    </div>
+</div>
+
+{% if oidc_details.refresh_token %}
+<div class="section collapsible">
+    <h5 class="pico-color-azure-550" onclick="toggleSection(this)">▼ OIDC Refresh Token</h5>
+    <div class="content">
+        <pre style="word-break: break-all;">{{ oidc_details.refresh_token }}</pre>
+    </div>
+</div>
+{% endif %}
+
+{% if oidc_details.userinfo %}
+<div class="section collapsible">
+    <h5 class="pico-color-azure-550" onclick="toggleSection(this)">▼ UserInfo Endpoint Response</h5>
+    <div class="content">
+        <pre>{{ oidc_details.userinfo | tojson(indent=2) }}</pre>
+    </div>
+</div>
+{% endif %}
+
+{% if oidc_details.introspection %}
+<div class="section collapsible">
+    <h5 class="pico-color-azure-550" onclick="toggleSection(this)">▼ Token Introspection Response</h5>
+    <div class="content">
+        <pre>{{ oidc_details.introspection | tojson(indent=2) }}</pre>
+    </div>
+</div>
+{% endif %}
+
+{% if oidc_details.par_request %}
+<div class="section collapsible">
+    <h5 class="pico-color-azure-550" onclick="toggleSection(this)">▼ PAR Request Response</h5>
+    <div class="content">
+        <pre>{{ oidc_details.par_request | tojson(indent=2) }}</pre>
+    </div>
+</div>
+{% endif %}
+{% endif %}
+
+<div class="section">
+    <h5 class="pico-color-azure-550">🧪 Test Form</h5>
+    <p>Submit data to see how the inspector captures POST bodies:</p>
+    <form method="POST" action="/inspect">
+        <div>
+            <label>Text Field:</label>
+            <input type="text" name="test_field" placeholder="Enter some text">
+        </div>
+        <div>
+            <label>Email:</label>
+            <input type="email" name="test_email" placeholder="email@example.com">
+        </div>
+        <div>
+            <label>Message:</label>
+            <textarea name="test_message" rows="4" placeholder="Enter a message"></textarea>
+        </div>
+        <button type="submit">Submit Test Data</button>
+    </form>
+</div>
+
+<script>
+function toggleSection(element) {
+    const content = element.nextElementSibling;
+    const isHidden = content.style.display === 'none';
+    content.style.display = isHidden ? 'block' : 'none';
+    element.textContent = (isHidden ? '▼' : '▶') + element.textContent.substring(1);
+}
+</script>
+{% endblock %}
