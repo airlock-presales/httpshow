@@ -1,5 +1,5 @@
 """
-HttpShow: Simple Python http server to return request details in html
+HttpShow: Simple HTTP server to return request details in html
 
 Copyright 2018-2025 Urs Zurbuchen
 
@@ -464,9 +464,7 @@ class RP( object ):
     def _getPath(self, location: str=None) -> str:
         if location == None:
             location = '/'
-        # if self._cfg.port in [80, 443]:
-        #     return f"{self._cfg.base_url}{location}"
-        return f"{self._cfg.base_url}:{self._cfg.port}{location}"
+        return f"{self._cfg.base_url}{location}"
     
 
     async def _fetch_userinfo(self, access_token: str) -> Dict[str, Any]:
