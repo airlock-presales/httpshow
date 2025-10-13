@@ -1,5 +1,5 @@
 REPO = quay.io/miniboat/httpshow
-VERSION = 0.3.0
+VERSION = 0.3.1
 
 all:
 	@echo "build    Build container image (version: $(VERSION))"

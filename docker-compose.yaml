@@ -2,7 +2,7 @@ name: "httpshow"
 
 services:
   httpshow:
-    image: quay.io/miniboat/httpshow:0.3.0
+    image: quay.io/miniboat/httpshow:0.3.1
     container_name: httpshow
     ports:
       - 8000:8000

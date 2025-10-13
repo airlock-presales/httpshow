@@ -1,5 +1,5 @@
 """
-HttpShow: Simple Python http server to return request details in html
+HttpShow: Simple HTTP server to return request details in html
 
 Copyright 2018-2025 Urs Zurbuchen
 
@@ -66,8 +66,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="OIDC Request Inspector",
-    description="A secure request inspector with OIDC support",
-    version="0.3.0",
+    description="Simple HTTP request inspector with OIDC support",
+    version="0.3.1",
     lifespan=lifespan,
 )
 

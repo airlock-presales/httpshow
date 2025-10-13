@@ -1,5 +1,5 @@
 """
-HttpShow: Simple Python http server to return request details in html
+HttpShow: Simple HTTP server to return request details in html
 
 Copyright 2018-2025 Urs Zurbuchen
 
