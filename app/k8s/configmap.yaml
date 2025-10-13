@@ -4,6 +4,7 @@ metadata:
   name: httpshow
   namespace: httpshow
 data:
+  HTTPSHOW__LOG_LEVEL: "info"
   HTTPSHOW_SERVER_PORT: "8000"
   HTTPSHOW_BASE_URL: "http://localhost:8000"
   # HTTPSHOW_APP_SECRET_KEY: "your-secret-key-here-change-this-in-production"

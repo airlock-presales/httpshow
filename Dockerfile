@@ -1,7 +1,7 @@
 FROM python:3.13-slim
 
-ENV HTTPSHOW_VERSION=0.3.1
-ENV VERSION=0.3.1
+ENV HTTPSHOW_VERSION=0.3.2
+ENV VERSION=0.3.2
 ENV SUMMARY="HTTPShow: Simple HTTP request inspector with OIDC support"
 ENV TZ=Europe/Zurich
 ENV HOME=/home/httpshow
@@ -26,4 +26,4 @@ RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt \
 COPY ./app /code/app
 COPY ./samples ${HOME}
 
-CMD ["fastapi", "run", "app/main.py", "--port", "8000", "--host", "0.0.0.0"]
+CMD ["uvicorn", "app.main:app", "--port", "8000", "--host", "0.0.0.0"]
