@@ -2,12 +2,13 @@ name: "httpshow"
 
 services:
   httpshow:
-    image: quay.io/miniboat/httpshow:0.3.2
+    image: harbor.svc.marmira.com/services/httpshow:0.4.0
     container_name: httpshow
     ports:
-      - 8000:8000
+      - 8001:8000
     environment:
       - "TZ=Europe/Zurich"
+      - "HTTPSHOW_LOG_LEVEL=info"
       - "HTTPSHOW_CONFIG_FILE="
-    env_file: ".env"
+    env_file: "test.env"
     restart: unless-stopped

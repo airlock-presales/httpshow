@@ -1,7 +1,7 @@
 FROM python:3.13-slim
 
-ENV HTTPSHOW_VERSION=0.3.2
-ENV VERSION=0.3.2
+ENV HTTPSHOW_VERSION=$(build-tools/get-version.sh)
+ENV VERSION=$(build-tools/get-version.sh)
 ENV SUMMARY="HTTPShow: Simple HTTP request inspector with OIDC support"
 ENV TZ=Europe/Zurich
 ENV HOME=/home/httpshow

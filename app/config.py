@@ -26,6 +26,8 @@ import logging
 import os
 import yaml
 
+from app import __VERSION__
+
 #---------------------------------------------------------------------------
 #   Miscellaneous module data
 #---------------------------------------------------------------------------
@@ -70,13 +72,16 @@ class Settings( object ):
         elif _log_level.lower() == "critical":
             self.log_level = 50
         self._logger.setLevel( self.log_level )
+        self._logger.info( f"Version: {__VERSION__}")
+        self._logger.info( f"Configfile: {self._configfile}")
         self.load()
+        self.version = __VERSION__
         self.port = self.get( "HTTPSHOW_SERVER_PORT", "server.port", default=8000, data_type="int" )
-        self.app_secret_key = self.get( "HTTPSHOW_APP_SECRET_KEY", "httpshow.appSecret", default="" )
+        self.base_url = self.get( "HTTPSHOW_BASE_URL", "server.baseURL", default="http://localhost" )
         self.oidc_issuer = self.get( "HTTPSHOW_OIDC_ISSUER", "oidc.issuer" )
         self.oidc_client_id = self.get( "HTTPSHOW_OIDC_CLIENT_ID", "oidc.client.id" )
         self.oidc_client_secret = self.get( "HTTPSHOW_OIDC_CLIENT_SECRET", "oidc.client.secret" )
-        self.oidc_client_timeout = self.get( "HTTPSHOW_OIDC_TIMEOUT", "oidc.client.timeout", data_type="int" )
+        self.oidc_logout_url = self.get( "HTTPSHOW_OIDC_LOGOUT_URL", "oidc.logoutUrl" )
         scopes = self.get( "HTTPSHOW_OIDC_SCOPES", "oidc.scopes", default=[] )
         if isinstance(scopes, list):
             self.oidc_scope = " ".join( scopes )
@@ -85,12 +90,28 @@ class Settings( object ):
         self.pkce = self.get( "HTTPSHOW_OIDC_PKCE", "oidc.pkce", default=True, data_type="bool" )
         self.par = self.get( "HTTPSHOW_OIDC_PAR", "oidc.par", default=False, data_type="bool" )
         self.userinfo = self.get( "HTTPSHOW_OIDC_USERINFO", "oidc.userInfo", default=False, data_type="bool" )
-        self.verify_provider_certificate = self.get( "HTTPSHOW_OIDC_VERIFY_PROVIDER_CERTIFICATE", "oidc.verifyProviderCertificate", default=True, data_type="bool" )
-        self.base_url = self.get( "HTTPSHOW_BASE_URL", "server.baseURL", default="http://localhost" )
+        self.app_secret_key = self.get( "HTTPSHOW_APP_SECRET_KEY", "httpshow.appSecret", default="" )
+        self.client_timeout = self.get( "HTTPSHOW_CLIENT_TIMEOUT", "httpshow.timeout", data_type="int" )
+        self.verify_backend_certificate = self.get( "HTTPSHOW_VERIFY_PROVIDER_CERTIFICATE", "httpshow.verifyBackendCertificate", default=True, data_type="bool" )
         self.session_cookie_name = self.get( "HTTPSHOW_SESSION_COOKIE_NAME", "httpshow.session.cookieName", default="httpshow" )
         self.session_lifetime = self.get( "HTTPSHOW_SESSION_LIFETIME", "httpshow.session.lifetime", default=300, data_type="int" )
         self.trust_proxy_headers = self.get( "HTTPSHOW_TRUST_PROXY_HEADERS", "server.trustProxyHeaders", default=False, data_type="bool" )
         self.trusted_proxies = self.get( "HTTPSHOW_TRUSTED_PROXIES", "server.trustedProxies", default=[] )
+        self.api_auth_token = self.get( "HTTPSHOW_API_AUTH_TOKEN", "api.authTokenType" )
+        if self.api_auth_token and self.api_auth_token.lower() in ['id', 'id_token', 'id-token']:
+            self.api_auth_token = 'id-token'
+        else:
+            self.api_auth_token = 'access-token'
+        self.api_auth_header = self.get( "HTTPSHOW_API_AUTH_HEADER", "api.authHeader" )
+        self.api_direct_url = self.get( "HTTPSHOW_API_URL", "api.direct.url", default=self.base_url )
+        self.api_direct_host = self.get( "HTTPSHOW_API_HOST", "api.direct.host" )
+        self.api_tkx_url = self.get( "HTTPSHOW_API_TKX_URL", "api.exchanged.url", default=f"{self.base_url}/tkx" )
+        self.api_tkx_host = self.get( "HTTPSHOW_API_TKX_HOST", "api.exchanged.host" )
+        self.tokenexchange_url = self.get( "HTTPSHOW_TOKEN_EXCHANGE_URL", "tokenExchange.url" )
+        self.tokenexchange_host = self.get( "HTTPSHOW_TOKEN_EXCHANGE_HOST", "tokenExchange.host" )
+        self.tokenexchange_delegation_claim = self.get( "HTTPSHOW_TOKEN_EXCHANGE_DELEGATION_CLAIM", "tokenExchange.delegationClaim" )
+        self.tokenexchange_client_id = self.get( "HTTPSHOW_TOKEN_EXCHANGE_CLIENT_ID", "tokenExchange.client.id" )
+        self.tokenexchange_client_secret = self.get( "HTTPSHOW_TOKEN_EXCHANGE_CLIENT_SECRET", "tokenExchange.client.secret" )
         self.css_file = self.get( "HTTPSHOW_CSS_FILE", "httpshow.cssFile", default="/opt/httpshow/style.css" )
         self.night_mode = self.get( "HTTPSHOW_NIGHT_MODE", "httpshow.nightMode", default=False, data_type="bool" )
 

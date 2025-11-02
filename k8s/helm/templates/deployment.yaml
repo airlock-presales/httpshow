@@ -1,0 +1,204 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "httpshow.fullname" . }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "httpshow.labels" . | nindent 4 }}
+  annotations:
+    {{- include "httpshow.annotations" $ | nindent 4 }}
+spec:
+  replicas: {{ .Values.deployment.replicaCount }}
+  revisionHistoryLimit: {{ .Values.deployment.revisionHistoryLimit }}
+  selector:
+    matchLabels:
+      {{- include "httpshow.selectorLabels" . | nindent 6 }}
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+    {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      labels:
+        {{- include "httpshow.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "httpshow.fullname" . }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: HTTPSHOW_LOG_LEVEL
+              value: {{ .Values.config.httpshow.logLevel }}
+            - name: HTTPSHOW_SERVER_PORT
+              value: "8000"
+            - name: HTTPSHOW_BASE_URL
+              value: {{ print "https://" .Values.ingress.dns.hostname }}
+            - name: HTTPSHOW_APP_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "httpshow.fullname" . }}
+                  key: "app-secret"
+            - name: HTTPSHOW_CLIENT_TIMEOUT
+              value: {{ .Values.config.httpshow.timeout | quote }}
+            - name: HTTPSHOW_VERIFY_PROVIDER_CERTIFICATE
+              value: {{ .Values.config.httpshow.verifyBackendCertificate | quote }}
+            {{- if .Values.config.oidc.issuer }}
+            - name: HTTPSHOW_OIDC_ISSUER
+              value: {{ .Values.config.oidc.issuer }}
+            {{- end }}
+            {{- if .Values.config.oidc.client.id }}
+            - name: HTTPSHOW_OIDC_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "httpshow.fullname" . }}
+                  key: "oidc-client-id"
+            {{- end }}
+            {{- if .Values.config.oidc.client.secret }}
+            - name: HTTPSHOW_OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "httpshow.fullname" . }}
+                  key: "oidc-client-secret"
+            {{- end }}
+            {{- if .Values.config.oidc.logoutUrl }}
+            - name: HTTPSHOW_OIDC_LOGOUT_URL
+              value: {{ .Values.config.oidc.logoutUrl }}
+            {{- end }}
+            {{- if .Values.config.oidc.scopes }}
+            - name: HTTPSHOW_OIDC_SCOPES
+              value: {{ join " " .Values.config.oidc.scopes }}
+            {{- end }}
+            - name: HTTPSHOW_OIDC_PKCE
+              value: {{ .Values.config.oidc.pkce | quote }}
+            - name: HTTPSHOW_OIDC_PAR
+              value: {{ .Values.config.oidc.par | quote }}
+            - name: HTTPSHOW_OIDC_USERINFO
+              value: {{ .Values.config.oidc.userInfo | quote }}
+            {{- if .Values.config.httpshow.session.cookieName }}
+            - name: HTTPSHOW_SESSION_COOKIE_NAME
+              value: {{ .Values.config.httpshow.session.cookieName }}
+            {{- end }}
+            - name: HTTPSHOW_SESSION_LIFETIME
+              value: {{ .Values.config.httpshow.session.lifetime | quote }}
+            - name: HTTPSHOW_TRUST_PROXY_HEADERS
+              value: {{ .Values.config.server.trustProxyHeaders | quote }}
+            {{- if .Values.config.server.trustedProxies }}
+            - name: HTTPSHOW_TRUSTED_PROXIES
+              value: {{ join " " .Values.config.server.trustedProxies }}
+            {{- end }}
+            {{- if .Values.config.api.authTokenType }}
+            - name: HTTPSHOW_API_AUTH_TOKEN
+              value: {{ .Values.config.api.authTokenType }}
+            {{- end }}
+            {{- if .Values.config.api.authHeader }}
+            - name: HTTPSHOW_API_AUTH_HEADER
+              value: {{ .Values.config.api.authHeader }}
+            {{- end }}
+            {{- if .Values.config.api.direct.url }}
+            - name: HTTPSHOW_API_URL
+              value: {{ .Values.config.api.direct.url }}
+            {{- end }}
+            {{- if .Values.config.api.direct.host }}
+            - name: HTTPSHOW_API_HOST
+              value: {{ .Values.config.api.direct.host }}
+            {{- end }}
+            {{- if .Values.config.api.exchanged.url }}
+            - name: HTTPSHOW_API_TKX_URL
+              value: {{ .Values.config.api.exchanged.url }}
+            {{- end }}
+            {{- if .Values.config.api.exchanged.host }}
+            - name: HTTPSHOW_API_TKX_HOST
+              value: {{ .Values.config.api.exchanged.host }}
+            {{- end }}
+            {{- if .Values.config.tokenExchange.url }}
+            - name: HTTPSHOW_TOKEN_EXCHANGE_URL
+              value: {{ .Values.config.tokenExchange.url }}
+            {{- end }}
+            {{- if .Values.config.tokenExchange.host }}
+            - name: HTTPSHOW_TOKEN_EXCHANGE_HOST
+              value: {{ .Values.config.tokenExchange.host }}
+            {{- end }}
+            {{- if .Values.config.tokenExchange.client.secret }}
+            - name: HTTPSHOW_TOKEN_EXCHANGE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "httpshow.fullname" . }}
+                  key: "token-exchange-client-id"
+            {{- end }}
+            {{- if .Values.config.tokenExchange.client.secret }}
+            - name: HTTPSHOW_TOKEN_EXCHANGE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "httpshow.fullname" . }}
+                  key: "token-exchange-client-secret"
+            {{- end }}
+            {{- if .Values.timezone }}
+            - name: TZ
+              value: {{ .Values.timezone | quote }}
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          {{- if .Values.healthChecks.liveness.enable }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: {{ .Values.healthChecks.liveness.initialDelay }}
+            periodSeconds: {{ .Values.healthChecks.liveness.period }}
+            timeoutSeconds: {{ .Values.healthChecks.liveness.timeout }}
+            successThreshold: {{ .Values.healthChecks.liveness.successes }}
+            failureThreshold: {{ .Values.healthChecks.liveness.failures }}
+          {{- end }}
+          {{- if .Values.healthChecks.readiness.enable }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: {{ .Values.healthChecks.readiness.initialDelay }}
+            periodSeconds: {{ .Values.healthChecks.readiness.period }}
+            timeoutSeconds: {{ .Values.healthChecks.readiness.timeout }}
+            successThreshold: {{ .Values.healthChecks.readiness.successes }}
+            failureThreshold: {{ .Values.healthChecks.readiness.failures }}
+          {{- end }}
+          {{- if .Values.healthChecks.startup.enable }}
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: {{ .Values.healthChecks.startup.initialDelay }}
+            periodSeconds: {{ .Values.healthChecks.startup.period }}
+            timeoutSeconds: {{ .Values.healthChecks.startup.timeout }}
+            successThreshold: {{ .Values.healthChecks.startup.successes }}
+            failureThreshold: {{ .Values.healthChecks.startup.failures }}
+          {{- end }}
+          {{- if .Values.priorityClassName }}
+          priorityClassName: {{ .Values.priorityClassName | quote }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      dnsConfig:
+        options:
+          - name: ndots
+            value: {{ .Values.ingress.dns.ndots | quote }}
+      restartPolicy: {{ quote .Values.restartPolicy }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

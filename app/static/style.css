@@ -18,11 +18,71 @@ footer {
     transform: translateY(-50%);
 }
 
-.user_header {
-    font-size: small;
-    margin-bottom: 0;
+.value {
+    font-weight: 700;
 }
 
+.label {
+    font-size: small;
+    font-style: normal;
+    font-weight: 300;
+    width: 8em;
+    display: inline-block;
+}
+
+.label_header {
+    width: 100%;
+}
+
+/* .label_user {
+    width: 5em;
+    display: inline-block;
+}
+
+.label_basic_auth {
+    width: 8em;
+    display: inline-block;
+}
+
+.label_body {
+    width: 8em;
+    display: inline-block;
+}
+
+.label_client {
+    width: 8em;
+    display: inline-block;
+} */
+
+.data_value
+{
+    margin-bottom: 0;
+    font-size: 100%;
+}
+
+.info {
+    font-style: italic;
+}
+
+.error {
+    color: lightcoral;
+}
+
+.warning {
+    color: darkorange;
+}
+
+.client_trusted {
+    color: green;
+}
+
+.client_untrusted {
+    color: red;
+}
+
+.subheader {
+    margin-bottom: 0px;
+}
 
 .header_header {
     font-size: small;

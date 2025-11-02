@@ -1,0 +1,65 @@
+{% extends "request.html" %}
+
+{% block api %}
+<div class="section collapsible">
+    <h5 class="pico-color-azure-550" onclick="toggleSection(this)">▼ API Call</h5>
+    <div class="content">
+        <h6 class="subheader">Response</h6>
+        <p class="data_value value"><span class="label label_api">Status Code: </span>{{ api_details.status }}</p>
+
+        <h6 class="subheader">Request Details</h6>
+        <p class="data_value value"><span class="label label_api">Request Line: </span>
+            <pre>{{ api_details.json.details.request_line }}</pre>
+        </p>
+        {% if api_details.json.details.query_params %}
+        <p class="data_value value"><span class="label label_api">Query parameters:</span>
+            <pre>{{ api_details.json.details.query_params | tojson(indent=2) }}</pre>
+        </p>
+        {% endif %}
+        {% if api_details.json.details.headers %}
+        <p class="data_value value"><span class="label label_api">Headers:</span>
+            <pre>{{ api_details.json.details.headers | tojson(indent=2) }}</pre>
+        </p>
+        {% endif %}
+        {% if api_details.json.details.cookies %}
+        <p class="data_value value"><span class="label label_api">Cookies:</span>
+            <pre>{{ api_details.json.details.cookies | tojson(indent=2) }}</pre>
+        </p>
+        {% endif %}
+        {% if api_details.json.details.body_preview %}
+        <p class="data_value value"><span class="label label_api">Body:</span>
+            <pre>Content-Type: {{ api_details.json.details.content_type }}</pre>
+            <pre>{{ api_details.json.details.body_preview }}</pre>
+        </p>
+        {% endif %}
+        {% if api_details.json.details.basic_auth %}
+        <h6 class="subheader">Basic Auth</h6>
+        <pre>{{ api_details.json.details.basic_auth | tojson(indent=2) }}</pre>
+        {% endif %}
+        {% if api_details.json.details.bearer_auth %}
+        <h6 class="subheader">Bearer Token</h6>
+        {% if api_details.json.details.bearer_auth.header %}
+        <p class="data_value value"><span class="label label_api">Header: </span>
+            <pre>{{ api_details.json.details.bearer_auth.header | tojson(indent=2) }}</pre>
+        </p>
+        <p class="data_value value"><span class="label label_api">Payload: </span>
+            <pre>{{ api_details.json.details.bearer_auth.payload | tojson(indent=2) }}</pre>
+        </p>
+        {% endif %}
+        <p class="data_value value"><span class="label label_api">Raw Token: </span>
+            <pre style="word-break: break-all;">{{ api_details.json.details.bearer_auth.raw }}</pre>
+        </p>
+        {% endif %}
+        {% if api_details.json.oidc_details %}
+        <h6 class="subheader">OIDC</h6>
+        <pre>{{ api_details.json.oidc_details | tojson(indent=2) }}</pre>
+        {% endif %}
+        {% if api_details.json.user and api_details.json.user.user_id %}
+        <h6 class="subheader">User</h6>
+        <pre>{{ api_details.json.user | tojson(indent=2) }}</pre>
+        {% endif %}
+        <h6 class="subheader">JSON</h6>
+        <pre>{{ api_details | tojson(indent=2) }}</pre>
+    </div>
+</div>
+{% endblock %}

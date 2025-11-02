@@ -1,0 +1,37 @@
+{{- if eq .Values.ingress.type "ingress" -}}
+{{-   $fullName := include "httpshow.fullname" . -}}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $fullName }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "httpshow.labels" $ | nindent 4 }}
+  annotations:
+    {{- include "httpshow.annotations" $ | nindent 4 }}
+    {{- with $.Values.ingress.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  ingressClassName: {{ $.Values.ingress.className }}
+  rules:
+    - host: {{ $.Values.ingress.dns.hostname }}
+      http:
+        paths:
+        - backend:
+            service:
+              name: {{ $fullName }}
+              port:
+                number: {{ .Values.service.port }}
+          path: "/"
+          pathType: Prefix
+  {{- if ne $.Values.ingress.tls.secretName "" }}
+  tls:
+  - hosts:
+    - {{ $.Values.ingress.dns.hostname }}
+    {{- with $.Values.ingress.tls.secretName }}
+    secretName: {{ . }}
+    {{- end -}}
+  {{- end }}
+{{- end -}}

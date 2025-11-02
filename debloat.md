@@ -4,36 +4,65 @@
 
 ### Build container image
    ```bash
-   # vi Dockerfile to adjust version number, e.g. 0.3.2
+   make info
+   # Check tag is ok, if not: vi Dockerfile to adjust target repository (REPO=)
    make build
-   docker push harbor.svc.marmira.com/services/httpshow:0.3.2
+   make push
    ```
 
 ### Start BAFFS
    ```bash
-   docker run -d --name baffs --privileged=true -v /var/tmp/docker/:/var/lib/docker -v /var/tmp/baffs:/var/lib/data -p 8000:8000 justinzhf/baffs:latest
+   docker run -d --name baffs --privileged=true \
+      -v /var/tmp/docker/:/var/lib/docker \
+      -v ./samples:/var/lib/data \
+      -p 8000:8000 \
+      justinzhf/baffs:latest
    docker exec -it baffs bash
    ```
 
 ## In BAFFS
 
+### Set environment
+
+   The container images' tag is used repeatedly. Instead of specifying it each time, set an environment variable,
+   ```bash
+   export tag=my-repo.example.com/airlock/httpshow:0.4.0
+   ```
+
 ### Prepare to profile image
 
    In one terminal, start application within BAFFS and profile it
    ```bash
-   docker pull harbor.svc.marmira.com/services/httpshow:0.3.2
-   baffs shadow --images=harbor.svc.marmira.com/services/httpshow:0.3.2
-   docker run -it --rm --name the_app --env-file /var/lib/data/httpshow/test.env -p 8000:8000 harbor.svc.marmira.com/services/httpshow:0.3.2
+   docker pull "${tag}"
+   baffs shadow --images="${tag}"
+   docker run -it --rm --name the_app --env-file /var/lib/data/debloat.env -p 8000:8000 "${tag}"
    ```
 
-### Use application
+### In another terminal
 
-   E.g., for HTTPShow, open web browser and use it
-
-### In another terminal, exec into container to flag files used for shell access
+   Exec into container to flag files used for shell access
    ```bash
    docker exec -it the_app /bin/bash
    ```
+
+   Read all application files to make sure they remain included in image:
+   ```bash
+   find app/ -type f -print -exec cp {} /dev/null \;
+   ```
+
+   Exit from application container and test HTML & JSON responses:
+   ```
+   curl -s http://localhost:8000/api
+   curl -s http://localhost:8000/api -H "Accept: application/json"
+   ```
+
+## Back on build system
+
+### Use application
+
+   Open web browser and use it
+
+## In BAFFS again
 
 ### Stop application
    ```bash
@@ -42,7 +71,7 @@
 
 ### Debloat image
    ```bash
-   baffs debloat --images=harbor.svc.marmira.com/services/httpshow:0.3.2
+   baffs debloat --images="${tag}"
    ```
 
 ### Check reduction
@@ -50,25 +79,20 @@
    docker image ls
    ```
 
-### Push debloated image to Harbor
+### Push debloated image to container repo
    ```bash
-   docker push harbor.svc.marmira.com/services/httpshow:0.3.2-baffs
+   docker login "${tag%%/*}"
+   docker push "${tag}"-baffs
    ```
 
 ## On build system
 
-### Pull debloated image from Harbor
-   ```bash
-   docker pull harbor.svc.marmira.com/services/httpshow:0.3.2-baffs
-   ```
-
 ### Tag debloated image for quay.io
    ```bash
-   img="$(docker image ls harbor.svc.marmira.com/services/httpshow:0.3.2-baffs | awk '/httpshow/{print $3}')"
-   docker tag ${img} quay.io/miniboat/httpshow:0.3.2
+   make quay
    ```
 
 ### Update image on quay.io
    ```bash
-   docker push quay.io/miniboat/httpshow:0.3.2
+   make quay-push
    ```

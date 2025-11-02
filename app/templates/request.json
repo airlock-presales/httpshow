@@ -1,0 +1,7 @@
+{
+"user": {% if user %}{{ user | tojson() }}{% else %}{}{% endif %},
+"details": {% if details %}{{ details | tojson }}{% else %}{}{% endif %},
+"oidc_details": {% if oidc_details %}{{ oidc_details | tojson }}{% else %}{}{% endif %},
+"auth_info_details": {% if auth_info_details %}{{ auth_info_details | tojson }}{% else %}{}{% endif %},
+"api_details": {% if api_details %}{{ api_details | tojson }}{% else %}{}{% endif %}
+}

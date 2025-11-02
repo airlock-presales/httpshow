@@ -1,0 +1,11 @@
+apiVersion: v2
+appVersion: "0.4.1"
+description: Helm chart for HTTPShow
+home: https://github.com/airlock-presales/httpshow
+maintainers:
+  - name: Airlock Pre-Sales
+    url: https://github.com/airlock-presales/
+name: httpshow
+sources:
+  - https://github.com/airlock-presales/httpshow-chart
+version: 0.4.1

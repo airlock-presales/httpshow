@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "httpshow.fullname" . }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "httpshow.labels" $ | nindent 4 }}
+  annotations:
+    {{- include "httpshow.annotations" $ | nindent 4 }}
+spec:
+  selector:
+    {{- include "httpshow.selectorLabels" $ | nindent 4 }}
+  type: {{ .Values.service.type }}
+{{- if .Values.service.externalTrafficPolicy }}
+  externalTrafficPolicy: {{ quote .Values.service.externalTrafficPolicy }}
+{{- end }}
+  ports:
+    - name: http
+      port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP

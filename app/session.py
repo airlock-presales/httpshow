@@ -42,6 +42,7 @@ class SessionData( object ):
         else:
             self._expires = 0
         self._valid = True
+        self._logger.debug(f"New session: {self.id}")
         self.store( data )
     
     def __repr__( self ) -> str:
@@ -105,7 +106,7 @@ class SessionData( object ):
             self.name = value
         else:
             self._data[key] = value
-        self._logger.debug(f"Session: {key} = {value}")
+        self._logger.debug(f"Session {self.id}: {key} = {value}")
     
     def store( self, data: dict=None ):
         if data != None:
@@ -113,6 +114,7 @@ class SessionData( object ):
                 self.set( key, value )
     
     def delete( self, key ):
+        self._logger.debug(f"Session {self.id}: rm {key}")
         if key == "user_id":
             self.user_id = None
         elif key == "email":
@@ -131,6 +133,8 @@ class SessionStore( object ):
         self._cfg = cfg
         self._sessions = {}
         self._next_cleanup = 0
+        self._logger = logging.getLogger(__name__)
+        self._logger.setLevel(self._cfg.log_level)
         self._cleanup( time.time() )
         # print( f"Cleanup @ {self._next_cleanup}" )
     
@@ -148,14 +152,18 @@ class SessionStore( object ):
         if session_id == None:
             return None
         now = time.time()
+        self._logger.debug(f"Find session: {session_id} @ {now} / {self._next_cleanup}")
         if now > self._next_cleanup:
             self._cleanup( now )
         try:
-            return self._sessions[session_id]
+            r = self._sessions[session_id]
+            self._logger.debug(f"  {r}")
+            return r
         except KeyError:
             return None
     
     def delete( self, session_id: str ):
+        self._logger.debug(f"Delete session: {session_id}")
         try:
             del self._sessions[session_id]
         except KeyError:
@@ -169,6 +177,7 @@ class SessionStore( object ):
         for session_id in keys:
             session_data = self._sessions[session_id]
             if session_data.isExpired( now ):
+                self._logger.debug(f"Cleanup session: {session_id}")
                 del self._sessions[session_id]
                 continue
         # for session_id, session_data in self._sessions.items():

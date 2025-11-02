@@ -34,9 +34,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
-from app import config
-from app import oidc
-from app import session
+from app import __VERSION__
+from app import config, oidc, response, session
 from app.utils import (
     parse_request_details,
     setup_logging,
@@ -51,6 +50,7 @@ logger = logging.getLogger(__name__)
 
 cfg = config.Settings()
 rp = oidc.RP(cfg)
+output = response.RequestMirror(cfg)
 logger.setLevel(cfg.log_level)
 
 authSessions = session.SessionStore(cfg)
@@ -67,7 +67,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="OIDC Request Inspector",
     description="Simple HTTP request inspector with OIDC support",
-    version="0.3.2",
+    version=__VERSION__,
     lifespan=lifespan,
 )
 
@@ -105,28 +105,52 @@ def add_security_headers(response: Response):
 async def oidc_login(request: Request):
     """Initiate OIDC login flow."""
     logger.info(f"{request.client.host if request.client else "unknown"} - {request.method} {request.url.path}")
-    return await rp.handle_login(request, sessions=authSessions)
+    return await rp.handle_login(request, sessions=authSessions, output=output)
 
 
 @app.get("/oidc/callback")
 async def oidc_callback(request: Request):
     """Handle OIDC callback."""
     logger.info(f"{request.client.host if request.client else "unknown"} - {request.method} {request.url.path}")
-    return await rp.handle_callback(request, sessions=authSessions)
+    return await rp.handle_callback(request, sessions=authSessions, output=output)
 
 
 @app.api_route("/oidc/logout", methods=["GET", "POST"])
 async def oidc_logout(request: Request):
     """Clear session and logout."""
     logger.info(f"{request.client.host if request.client else "unknown"} - {request.method} {request.url.path}")
-    return await rp.handle_logout(request, sessions=authSessions)
+    return await rp.handle_logout(request, sessions=authSessions, output=output, oidc_logout=True)
 
 
 @app.get("/profile", response_class=HTMLResponse)
 async def profile(request: Request):
     """Show user profile with token introspection."""
     logger.info(f"{request.client.host if request.client else "unknown"} - {request.method} {request.url.path}")
-    return await rp.handle_profile(request, sessions=authSessions)
+    response = await rp.handle_profile(request, sessions=authSessions, output=output)
+    return add_security_headers(response)
+
+
+@app.get("/api", response_class=HTMLResponse)
+async def api(request: Request):
+    """Call backend API with bearer token."""
+    logger.info(f"{request.client.host if request.client else "unknown"} - {request.method} {request.url.path}")
+    response = await rp.handle_api_call(request, sessions=authSessions, output=output)
+    return add_security_headers(response)
+
+
+@app.get("/tkx", response_class=HTMLResponse)
+async def api(request: Request):
+    """Call backend API after token exchange."""
+    logger.info(f"{request.client.host if request.client else "unknown"} - {request.method} {request.url.path}")
+    response = await rp.handle_api_call(request, sessions=authSessions, output=output, delegation=True)
+    return add_security_headers(response)
+
+
+@app.api_route("/clear", methods=["GET", "POST"])
+async def oidc_logout(request: Request):
+    """Clear session and logout."""
+    logger.info(f"{request.client.host if request.client else "unknown"} - {request.method} {request.url.path}")
+    return await rp.handle_logout(request, sessions=authSessions, output=output)
 
 
 @app.post("/toggle-theme")
@@ -147,18 +171,33 @@ async def health():
 async def home(request: Request, path_name: str):
     """Request inspector endpoint."""
     logger.info(f"{request.client.host if request.client else "unknown"} - {request.method} {request.url.path}")
+    response = await output.mirror(request, sessions=authSessions)
+    return add_security_headers(response)
     details = await parse_request_details(request, cfg)
     
-    response = templates.TemplateResponse(
-        "request.html",
-        {
-            "request": request,
-            "path": path_name,
-            # "user": user,
-            "details": details,
-            "night_mode": cfg.night_mode,
-        },
-    )
+    # logger.debug( f"Accept: {request.headers.get("accept")}" )
+    if request.headers.get("accept") == "application/json":
+        response = templates.TemplateResponse(
+            "request.json",
+            {
+                "request": request,
+                # "path": path_name,
+                # "user": user,
+                "details": details,
+            },
+        )
+        response.headers["Content-Type"] = "application/json"
+    else:
+        response = templates.TemplateResponse(
+            "request.html",
+            {
+                "request": request,
+                # "path": path_name,
+                # "user": user,
+                "details": details,
+                "night_mode": cfg.night_mode,
+            },
+        )
     return add_security_headers(response)
 
 

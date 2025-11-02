@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: httpshow
+  namespace: httpshow
+data:
+  HTTPSHOW_LOG_LEVEL: "warning"
+  HTTPSHOW_BASE_URL: "https://httpshow.example.com"
+  HTTPSHOW_CLIENT_TIMEOUT: "30"
+  HTTPSHOW_VERIFY_PROVIDER_CERTIFICATE: "false"
+  HTTPSHOW_OIDC_ISSUER: ""
+  HTTPSHOW_OIDC_LOGOUT_URL: logout-url-on-oidc-op
+  HTTPSHOW_OIDC_SCOPES: openid email profile
+  HTTPSHOW_OIDC_PKCE: "true"
+  HTTPSHOW_OIDC_PAR: "false"
+  HTTPSHOW_OIDC_USERINFO: "false"
+  HTTPSHOW_API_AUTH_TOKEN: "access-token"
+  HTTPSHOW_API_AUTH_HEADER: 
+  HTTPSHOW_API_URL: http://localhost:8000
+  HTTPSHOW_API_HOST: 
+  HTTPSHOW_API_TKX_URL: backend-url-expecting-exchanged-token
+  HTTPSHOW_API_TKX_HOST: 
+  HTTPSHOW_TOKEN_EXCHANGE_URL: url-for-token-endpoint
+  HTTPSHOW_TOKEN_EXCHANGE_HOST: 
+  HTTPSHOW_SESSION_COOKIE_NAME: "demo_session"
+  HTTPSHOW_SESSION_LIFETIME: "300"
+  HTTPSHOW_TRUST_PROXY_HEADERS: "true"
+  HTTPSHOW_TRUSTED_PROXIES: "10.0.0.0/8"
+  TZ: Europe/Zurich

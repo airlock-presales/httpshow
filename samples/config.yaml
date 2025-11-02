@@ -4,6 +4,7 @@ httpshow:
   session:
     cookieName: null
     lifetime: 300
+  verifyBackendCertificate: true
   cssFile: ""
   nightMode: false
   templates:
@@ -22,7 +23,22 @@ oidc:
   scopes:
     - email
     - profile
+  logoutUrl: ""
   pkce: true
   userInfo: false
   par: false
-  verifyProviderCertificate: true
+api:
+  authHeader: ""
+  authTokenType: ""
+  direct:
+    url: ""
+    host: ""
+  exchanged:
+    url: ""
+    host: ""
+tokenExchange:
+  url: ""
+  host: ""
+  client:
+    id: ""
+    secret: ""

@@ -1,0 +1,183 @@
+# HTTPShow - application setup
+
+config:
+  httpshow:
+    logLevel: "info"
+    session:
+      cookieName: null
+      lifetime: 300
+    verifyBackendCertificate: true
+    timeout: 30.0
+  server:
+    trustedProxies: []
+    trustProxyHeaders: false
+  oidc:
+    issuer: ""
+    client:
+      id: ""
+      secret: ""
+    scopes:
+      - email
+      - profile
+    logoutUrl: ""
+    pkce: true
+    userInfo: false
+    par: false
+  api:
+    authHeader: ""
+    authTokenType: ""
+    direct:
+      url: ""
+      host: ""
+    exchanged:
+      url: ""
+      host: ""
+  tokenExchange:
+    url: ""
+    host: ""
+    client:
+      id: ""
+      secret: ""
+
+
+## Network service
+service:
+  type: 'ClusterIP'
+  externalTrafficPolicy: false
+  port: 80
+
+  ## Service-specific annotations
+  ## - sometimes required for DNS settings et al.
+  annotations: {}
+
+
+## Data communications ingress
+## - make HTTPShow accessible from the outside
+ingress:
+  ## Type of ingress
+  ## - valid values: httproute, ingress, httpproxy
+  ## - httproute can be used for Airlock Microgateway
+  type: 'httproute'
+
+  ## Kubernetes Gateway API
+  httproute:
+    ## Which Gateway to use
+    ## - must be defined !!!
+    ## - supported formats: <name> or <namespace>/<name>
+    gateway: 'airlock-gateway/airlock-gateway'
+
+    ## Namespace of Gateway
+    ## - define namespace if gateway uses format <name>
+    namespace: ''
+
+    ## Listener section name
+    ## - gateways support multiple listeners
+    ## - section names help in the process of attaching an HTTPRoute to a specific listener
+    ## - optional but may need to be defined if listener cannot be uniquely determined from the hostname
+    ## - requires section names to be defined in the Gateway Listeners
+    sectionName: ''
+
+    ## Listener port
+    ## - listeners can be defined on different ports
+    ## - port specification help in the process of attaching an HTTPRoute to a specific listener
+    ## - optional but may need to be defined if listener cannot be uniquely determined from the hostname
+    ## - requires different ports to be defined in the Gateway Listeners
+    port: 0
+
+  ## Ingress settings
+  ## - used for type: ingress
+  ingress:
+    ## The Ingress API is provided by multiple implementations
+    ## - select desired implementation using className
+    className: ''
+
+  ## Response timeout
+  ## - specified as, e.g., "60s"
+  ## - usually not needed
+  timeout: ''
+
+  ##
+  dns:
+    ## FQDN to access HTTPShow
+    hostname: 'httpshow.example.com'
+
+    ## dnsConfig option
+    ndots: 2
+
+  ## TLS settings
+  tls:
+    ## Secret containing TLS certificate
+    secretName: ''
+
+  ## Ingress-specific annotations
+  ## - used to be required for older versions of Ingress API
+  annotations: {}
+
+
+healthChecks:
+  liveness:
+    enable: true
+    period: 60
+    timeout: 1
+    failures: 3
+    successes: 1
+    initialDelay: 5
+  readiness:
+    enable: true
+    period: 61
+    timeout: 1
+    failures: 3
+    successes: 1
+    initialDelay: 6
+  startup:
+    enable: true
+    period: 2
+    timeout: 1
+    failures: 20
+    successes: 1
+    initialDelay: 10
+
+
+## CPU & memory resource limits and requests
+resources:
+  requests: {}
+  limits: {}
+
+
+## Image Options
+image:
+  ## Container image for HTTPShow
+  repository: 'quay.io/miniboat/httpshow'
+
+  ## Tag that uniquely identifies the image.
+  ## If unset, uses value from Chart.yaml
+  tag: ''
+
+  ## When to pull the image.
+  pullPolicy: 'IfNotPresent'
+
+
+## Annotations that are added to the HTTPShow Pod.
+annotations: {}
+
+
+## Deployment settings
+deployment:
+  ## Maximum number of old ReplicaSets kept in history of Deployment
+  revisionHistoryLimit: 3
+
+  ## Number of replicas
+  replicaCount: 1
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+
+## Where the Helm chart originates
+chartSource: 'https://github.com/airlock-presales/httpshow-chart'
+
+
+timezone: 'Europe/Zurich'

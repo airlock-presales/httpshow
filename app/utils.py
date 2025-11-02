@@ -23,13 +23,16 @@ THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #   Module imports
 #---------------------------------------------------------------------------
 import base64
+import hashlib
+import hmac
+import ipaddress
 import json
 import logging
-import os
-from dataclasses import dataclass
+import secrets
 from typing import Dict, Any, Optional
 from html import escape
 
+from datetime import datetime, timedelta
 from fastapi import Request
 
 logger = logging.getLogger(__name__)
@@ -41,9 +44,9 @@ def setup_logging(level: int=30):
         level=level, #logging.INFO,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
-    for logname in ["uvicorn.error", "uvicorn.access"]:
-        l_error = logging.getLogger(logname)
-        l_error.disabled = True
+    #for logname in ["uvicorn.error", "uvicorn.access"]:
+    #    l_error = logging.getLogger(logname)
+    #    l_error.disabled = False
 
 
 def safe_html_escape(text: str, max_length: int = 10000) -> str:
@@ -79,6 +82,19 @@ def decode_basic_auth(auth_header: str) -> Optional[Dict[str, str]]:
         return None
 
 
+def decode_bearer_auth(auth_header: str) -> Optional[Dict[str, str]]:
+    """Decode HTTP Bearer Auth header."""
+    if not auth_header.startswith("Bearer "):
+        return None
+    
+    try:
+        encoded = auth_header[7:]
+        return decode_jwt_token(encoded) if encoded else None
+    except Exception as e:
+        logger.warning(f"Failed to decode Bearer Auth: {e}")
+        return None
+
+
 def decode_jwt_token(token: str) -> Optional[Dict[str, Any]]:
     """Decode JWT token without verification (for display purposes)."""
     try:
@@ -111,11 +127,13 @@ async def parse_request_details(request: Request, cfg) -> Dict[str, Any]:
     # Headers
     headers = dict(request.headers)
     
-    # Decode Basic Auth if present
+    # Decode Basic Auth or Bearer Auth if present
     basic_auth = None
+    bearer_auth = None
     auth_header = headers.get("authorization", "")
     if auth_header:
         basic_auth = decode_basic_auth(auth_header)
+        bearer_auth = decode_bearer_auth(auth_header)
     
     # Cookies
     cookies = dict(request.cookies)
@@ -169,7 +187,7 @@ async def parse_request_details(request: Request, cfg) -> Dict[str, Any]:
     # X-Forwarded-For (if present)
     forwarded_for = headers.get("x-forwarded-for")
     forwarded_trust = "untrusted"
-    if cfg.trust_proxy_headers and client_ip in cfg.trusted_proxies:
+    if cfg.trust_proxy_headers and ipaddress.ip_address(client_ip) in ipaddress.ip_network(cfg.trusted_proxies):
         forwarded_trust = "trusted"
     
     return {
@@ -179,6 +197,7 @@ async def parse_request_details(request: Request, cfg) -> Dict[str, Any]:
         "query_params": query_params,
         "headers": headers,
         "basic_auth": basic_auth,
+        "bearer_auth": bearer_auth,
         "cookies": cookies,
         "body_preview": body_preview,
         "body_data": body_data,
@@ -188,3 +207,23 @@ async def parse_request_details(request: Request, cfg) -> Dict[str, Any]:
         "forwarded_trust": forwarded_trust,
     }
 
+
+def base64url_encode(input) -> str:
+    return base64.urlsafe_b64encode(input.encode('ascii')).decode('utf-8').replace('=','')
+
+
+def create_jwt_token(userid, lifetime) -> str:
+    expiration = datetime.now() + timedelta(seconds=lifetime)
+    expiration = int(expiration.timestamp())
+    header = {
+        "alg": "HS256",
+        "typ": "JWT"
+    }
+    payload = {'exp': expiration,
+               'sub': userid,
+              }
+    secret_key = secrets.token_urlsafe(32)    
+    total_params = str(base64url_encode(json.dumps(header))) + '.' + str(base64url_encode(json.dumps(payload)))
+    signature = hmac.new(secret_key.encode(), total_params.encode(), hashlib.sha256).hexdigest()
+    token = total_params + '.' + str(base64url_encode(signature))
+    return token
