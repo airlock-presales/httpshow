@@ -76,6 +76,7 @@ HTTPShow supports both a configuration file and environment variables with the l
 | oidc.par | `HTTPSHOW_PAR` | false | Use Pushed Authorization Requests if provider supports it |
 | oidc.userInfo | `HTTPSHOW_USERINFO` | false | Fetch UserInfo when showing profile information |
 | oidc.logoutUrl | `HTTPSHOW_OIDC_LOGOUT_URL` | - | Logout URL on OIDC provider |
+| oidc.jwksRefresh | `HTTPSHOW_OIDC_JWKS_REFRESH` | 14400 | Refresh interval for JWKS |
 
 ## API Call Settings
 

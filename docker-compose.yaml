@@ -2,7 +2,7 @@ name: "httpshow"
 
 services:
   httpshow:
-    image: harbor.svc.marmira.com/services/httpshow:0.4.0
+    image: harbor.svc.marmira.com/services/httpshow:0.4.2
     container_name: httpshow
     ports:
       - 8001:8000
