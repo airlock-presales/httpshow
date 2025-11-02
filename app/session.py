@@ -23,7 +23,7 @@ THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #   Module imports
 #---------------------------------------------------------------------------
 import logging
-import time
+from datetime import datetime, timedelta
 from uuid import uuid4
 
 
@@ -38,7 +38,7 @@ class SessionData( object ):
         self._logger = logging.getLogger(__name__)
         self._logger.setLevel(self._cfg.log_level)
         if self._cfg.session_lifetime > 0:
-            self._expires = time.time() + self._cfg.session_lifetime
+            self._expires = datetime.now() + timedelta(seconds=self._cfg.session_lifetime)
         else:
             self._expires = 0
         self._valid = True
@@ -82,7 +82,7 @@ class SessionData( object ):
         # if self.isValid():
         #     return default
         if self._cfg.session_lifetime > 0:
-            self._expires = time.time() + self._cfg.session_lifetime
+            self._expires = datetime.now() + timedelta(seconds=self._cfg.session_lifetime)
         if key == "id":
             return self.id
         elif key == "user_id":
@@ -135,11 +135,11 @@ class SessionStore( object ):
         self._next_cleanup = 0
         self._logger = logging.getLogger(__name__)
         self._logger.setLevel(self._cfg.log_level)
-        self._cleanup( time.time() )
+        self._cleanup( datetime.now() )
         # print( f"Cleanup @ {self._next_cleanup}" )
     
     def create( self, data: dict={} ) -> SessionData:
-        now = time.time()
+        now = datetime.now()
         if now > self._next_cleanup:
             self._cleanup( now )
         session_id = str(uuid4())
@@ -151,7 +151,7 @@ class SessionStore( object ):
     def find( self, session_id: str ) -> SessionData:
         if session_id == None:
             return None
-        now = time.time()
+        now = datetime.now()
         self._logger.debug(f"Find session: {session_id} @ {now} / {self._next_cleanup}")
         if now > self._next_cleanup:
             self._cleanup( now )
@@ -184,5 +184,4 @@ class SessionStore( object ):
         #     if session_data.isExpired( now ):
         #         del self._sessions[session_id]
         #         continue
-        self._next_cleanup = now + 300
-    
+        self._next_cleanup = now + timedelta(seconds=300)

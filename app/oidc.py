@@ -25,6 +25,7 @@ THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 import base64
 import logging
 import secrets
+from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 from urllib.parse import urlencode
 
@@ -48,6 +49,7 @@ class RP( object ):
         self._cfg = cfg
         self._oidc = {}
         self._jwks_cache = {}
+        self._expires = datetime.now() - timedelta(seconds=86400)
         self._errors = []
         self._client = None
         self._logger = logging.getLogger(__name__)
@@ -218,6 +220,20 @@ class RP( object ):
             return await self._return_response(func, request, sessions, output)
         
         nonce = session_data.get("oidc_nonce")
+        if self._expires < datetime.now():
+            try:
+                # Fetch JWKS
+                jwks_uri = self._oidc.get("jwks_uri")
+                if jwks_uri:
+                    self._jwks_cache = {}
+                    jwks_response = await self._client.get(jwks_uri)
+                    jwks_response.raise_for_status()
+                    self._jwks_cache.update(jwks_response.json())
+                    self._expires = datetime.now() + timedelta(seconds=self._cfg.jwks_refresh_interval)
+                    self._logger.info(f"JWKS refreshed from {jwks_uri}")
+            except Exception as e:
+                self._logger.warning(f"Failed to refresh JWKS: {e}")
+                self._errors.append( {"id": 1105, "msg": f"OIDC: failed to refresh JWKS ({str(e)})"} )
         try:
             claims = self._verify_id_token(id_token, nonce)
         except Exception as e:
@@ -307,7 +323,7 @@ class RP( object ):
             introspection_result = await self._introspect_token(access_token)
         except Exception as e:
             self._logger.error(f"Token introspection failed: {e}")
-            self._errors.append( {"id": 1102, "msg": f"OIDC: introspection failed: {str(e)}"} )
+            self._errors.append( {"id": 1104, "msg": f"OIDC: introspection failed: {str(e)}"} )
         auth_info = {
             "token": None,
             "introspection": introspection_result

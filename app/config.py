@@ -90,6 +90,7 @@ class Settings( object ):
         self.pkce = self.get( "HTTPSHOW_OIDC_PKCE", "oidc.pkce", default=True, data_type="bool" )
         self.par = self.get( "HTTPSHOW_OIDC_PAR", "oidc.par", default=False, data_type="bool" )
         self.userinfo = self.get( "HTTPSHOW_OIDC_USERINFO", "oidc.userInfo", default=False, data_type="bool" )
+        self.jwks_refresh_interval = self.get( "HTTPSHOW_OIDC_JWKS_REFRESH", "oidc.jwksRefresh", default=14400, data_type="int" )
         self.app_secret_key = self.get( "HTTPSHOW_APP_SECRET_KEY", "httpshow.appSecret", default="" )
         self.client_timeout = self.get( "HTTPSHOW_CLIENT_TIMEOUT", "httpshow.timeout", data_type="int" )
         self.verify_backend_certificate = self.get( "HTTPSHOW_VERIFY_PROVIDER_CERTIFICATE", "httpshow.verifyBackendCertificate", default=True, data_type="bool" )
